@@ -1,0 +1,100 @@
+/* ===== Fonts =====
+   Both fonts are installed on this computer, so the browser loads them from here (local).
+   Visitors who don't have them installed will see the fallback font instead. */
+@font-face {
+  font-family: "Haarlemmer MT Std";
+  src: local("Haarlemmer MT Std"), local("HaarlemmerMTStd-Regular");
+}
+
+@font-face {
+  font-family: "Ploni ML v2 AAA";
+  src: local("Ploni ML v2 AAA"), local("PloniMLv2AAA-Regular");
+}
+
+/* ===== Design tokens (from the Figma frame) ===== */
+:root {
+  /* Colors */
+  --color-background: #ffffff;
+  --color-gold: #f9ba3a;  /* top of the text gradient */
+  --color-red: #a6000e;   /* bottom of the text gradient */
+  --text-gradient: linear-gradient(to bottom, var(--color-gold), var(--color-red));
+
+  /* Fonts */
+  --font-title: "Haarlemmer MT Std", serif;
+  --font-text: "Ploni ML v2 AAA", sans-serif;
+
+  /* Font sizes: the Figma size at desktop width, never smaller than the minimum on phones */
+  --size-title: 7.183cqw;               /* 103px in Figma */
+  --size-tagline: max(16px, 2.292cqw);  /* 33px in Figma */
+}
+
+/* ===== Basics ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh; /* full screen height on phones too */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+/* ===== Coming soon page ===== */
+
+/* The "stage" keeps the Figma frame's proportions (1440 × 1024) and fits it inside the screen */
+.stage {
+  position: relative;
+  width: min(100vw, 100dvh * 1440 / 1024);
+  aspect-ratio: 1440 / 1024;
+  container-type: inline-size; /* lets the font sizes above follow the stage width (cqw) */
+}
+
+/* Shared style for text filled with the gold-to-red gradient */
+.gradient-text {
+  background: var(--text-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Every item is centered horizontally; "top" is a percentage of the Figma frame height */
+.title,
+.tagline,
+.star {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.title {
+  top: calc(37.109% - 0.3em);
+  font-family: var(--font-title);
+  font-size: var(--size-title);
+  font-weight: 400;
+  line-height: 0.68;
+  /* The letters are taller than the line height, so the gradient needs extra room above
+     and below or the tops get cut off. The gradient stops keep the Figma color range. */
+  padding-block: 0.3em;
+  background-image: linear-gradient(to bottom, var(--color-gold) 0.3em, var(--color-red) calc(100% - 0.3em));
+}
+
+.tagline {
+  top: 45.313%;
+  font-family: var(--font-text);
+  font-size: var(--size-tagline);
+  font-weight: 400;
+  line-height: normal;
+}
+
+/* The small four-pointed star below the text */
+.star {
+  top: 62.6%;
+  width: 4.62%;
+  height: 7.227%;
+}
