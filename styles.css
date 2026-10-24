@@ -1,25 +1,24 @@
 /* ===== Fonts =====
-   All fonts are installed on this computer, so the browser loads them from here (local).
-   Visitors who don't have them installed will see the fallback font instead. */
+   The exact font files used in Figma, stored in the fonts folder.
+   Every visitor downloads them from the site, so the page looks the same on every device. */
 @font-face {
   font-family: "Haarlemmer MT Std";
-  src: local("Haarlemmer MT Std"), local("HaarlemmerMTStd-Regular");
+  src: url("fonts/haarlemmer-regular.otf") format("opentype");
 }
 
 @font-face {
   font-family: "Haarlemmer Bold Italic";
-  /* Uses the installed font if there is one, otherwise downloads it from the site */
-  src: local("HaarlemmerMTW01-BoldItalic"), url("fonts/haarlemmer-bold-italic.ttf") format("truetype");
+  src: url("fonts/haarlemmer-bold-italic.ttf") format("truetype");
 }
 
 @font-face {
   font-family: "Ploni ML v2 AAA";
-  src: local("Ploni ML v2 AAA"), local("PloniMLv2AAA-Regular");
+  src: url("fonts/ploni-regular.otf") format("opentype");
 }
 
 @font-face {
   font-family: "Ploni Round AAA";
-  src: local("Ploni Round AAA"), local("PloniRoundAAA"), local("PloniRoundAAA-Regular");
+  src: url("fonts/ploni-round-regular.otf") format("opentype");
 }
 
 /* ===== Design tokens (from the Figma frame, 1440 × 1024) ===== */
@@ -46,7 +45,7 @@
   --space-right: clamp(20px, 7.708vw, 111px);
   --space-bottom: clamp(32px, 5.486vw, 79px);
   --space-left: clamp(20px, 7.222vw, 104px);
-  --space-intro-to-status: clamp(32px, 4.236vw, 61px);
+  --space-intro-to-status: clamp(32px, 4.167vw, 60px);
 }
 
 /* ===== Basics ===== */
@@ -128,7 +127,7 @@ body {
 
 .statement {
   max-width: 21.27em; /* 808px in Figma, so the line breaks after "creating" */
-  margin-top: 0.812em;
+  margin-top: 0.733em;
   font-family: var(--font-statement);
   font-size: var(--size-statement);
   line-height: 1.08;
@@ -139,7 +138,7 @@ body {
   display: flex;
   flex-wrap: wrap; /* on narrow phones the sentence moves to its own line */
   align-items: center;
-  column-gap: 0.733em; /* 22px in Figma */
+  column-gap: 0.767em; /* 23px in Figma */
   font-size: var(--size-small);
 }
 
@@ -149,7 +148,7 @@ body {
   line-height: 0.68;
   /* Same trick as .intro: room for the letters, without changing the layout */
   padding-block: 0.3em;
-  margin-block: -0.3em;
+  margin-block: -0.18em -0.42em; /* also nudges the text down to line up with Figma */
   background-image: linear-gradient(to bottom, var(--color-gold) 0.3em, var(--color-red) calc(100% - 0.3em));
 }
 
