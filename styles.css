@@ -1,5 +1,5 @@
 /* ===== Fonts =====
-   Both fonts are installed on this computer, so the browser loads them from here (local).
+   All fonts are installed on this computer, so the browser loads them from here (local).
    Visitors who don't have them installed will see the fallback font instead. */
 @font-face {
   font-family: "Haarlemmer MT Std";
@@ -7,25 +7,45 @@
 }
 
 @font-face {
+  font-family: "Haarlemmer Bold Italic";
+  src: local("HaarlemmerMTW01-BoldItalic");
+}
+
+@font-face {
   font-family: "Ploni ML v2 AAA";
   src: local("Ploni ML v2 AAA"), local("PloniMLv2AAA-Regular");
 }
 
-/* ===== Design tokens (from the Figma frame) ===== */
+@font-face {
+  font-family: "Ploni Round AAA";
+  src: local("Ploni Round AAA"), local("PloniRoundAAA"), local("PloniRoundAAA-Regular");
+}
+
+/* ===== Design tokens (from the Figma frame, 1440 × 1024) ===== */
 :root {
   /* Colors */
   --color-background: #ffffff;
-  --color-gold: #f9ba3a;  /* top of the text gradient */
-  --color-red: #a6000e;   /* bottom of the text gradient */
-  --text-gradient: linear-gradient(to bottom, var(--color-gold), var(--color-red));
+  --color-gold: #f9ba3a;    /* top of the text gradient */
+  --color-red: #a6000e;     /* bottom of the text gradient */
+  --color-orange: #cb5321;  /* "Get in touch" link */
 
   /* Fonts */
+  --font-name: "Haarlemmer Bold Italic", serif;
   --font-title: "Haarlemmer MT Std", serif;
+  --font-statement: "Ploni Round AAA", sans-serif;
   --font-text: "Ploni ML v2 AAA", sans-serif;
 
-  /* Font sizes: the Figma size at desktop width, never smaller than the minimum on phones */
-  --size-title: 7.183cqw;               /* 103px in Figma */
-  --size-tagline: max(16px, 2.292cqw);  /* 33px in Figma */
+  /* Font sizes: clamp(smallest on phones, grows with the screen, Figma size on desktop) */
+  --size-name: clamp(34px, 4.167vw, 60px);
+  --size-statement: clamp(22px, 3.125vw, 45px);
+  --size-small: clamp(16px, 2.083vw, 30px);
+
+  /* Spacing around the page edges and between sections */
+  --space-top: clamp(24px, 6.597vw, 95px);
+  --space-right: clamp(20px, 7.708vw, 111px);
+  --space-bottom: clamp(32px, 5.486vw, 79px);
+  --space-left: clamp(20px, 7.222vw, 104px);
+  --space-intro-to-status: clamp(24px, 2.778vw, 40px);
 }
 
 /* ===== Basics ===== */
@@ -38,63 +58,106 @@ body {
   min-height: 100vh;
   min-height: 100dvh; /* full screen height on phones too */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  flex-direction: column;
+  justify-content: space-between; /* link at the top, text at the bottom */
+  padding: var(--space-top) var(--space-right) var(--space-bottom) var(--space-left);
   background: var(--color-background);
 }
 
-/* ===== Coming soon page ===== */
-
-/* The "stage" keeps the Figma frame's proportions (1440 × 1024) and fits it inside the screen */
-.stage {
-  position: relative;
-  width: min(100vw, 100dvh * 1440 / 1024);
-  aspect-ratio: 1440 / 1024;
-  container-type: inline-size; /* lets the font sizes above follow the stage width (cqw) */
-}
-
-/* Shared style for text filled with the gold-to-red gradient */
+/* Text filled with the gold-to-red gradient */
 .gradient-text {
-  background: var(--text-gradient);
+  background-image: linear-gradient(to bottom, var(--color-gold), var(--color-red));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Every item is centered horizontally; "top" is a percentage of the Figma frame height */
-.title,
-.tagline,
-.star {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
+/* ===== Top: "Get in touch" link ===== */
+.site-header {
+  display: flex;
+  justify-content: flex-end;
 }
 
-.title {
-  top: calc(37.109% - 0.3em);
+.contact-link {
+  font-family: var(--font-text);
+  font-size: var(--size-small);
+  line-height: 0.68;
+  color: var(--color-orange);
+  text-decoration: none;
+}
+
+.contact-link-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.333em; /* 10px in Figma */
+}
+
+/* The arrow image points right; Figma turns it to point up-right */
+.contact-arrow {
+  width: 0.707em;
+  height: 0.491em;
+  margin: 0.1em -0.15em 0;
+  transform: rotate(-51.34deg);
+}
+
+.contact-underline {
+  display: block;
+  width: 5.667em;  /* 170px in Figma */
+  height: 2px;
+  margin: 0.267em 0 0 0.1em;
+}
+
+/* ===== Bottom: name, statement and "coming soon" ===== */
+
+/* Name + statement share one gradient, gold at the top to red at the bottom.
+   The extra padding gives the letters room so the gradient doesn't cut them off. */
+.intro {
+  font-size: var(--size-statement);
+  padding-block: 0.4em 0.2em;
+  margin-bottom: calc(var(--space-intro-to-status) - 0.2em);
+  background-image: linear-gradient(to bottom, var(--color-gold) 0.4em, var(--color-red) calc(100% - 0.2em));
+}
+
+.name {
+  font-family: var(--font-name);
+  font-size: var(--size-name);
+  font-weight: 400;
+  line-height: 0.75;
+}
+
+.statement {
+  max-width: 17.97em; /* 808px in Figma, so the line breaks after "creating" */
+  margin-top: 0.728em;
+  font-family: var(--font-statement);
+  font-size: var(--size-statement);
+  line-height: 1.08;
+}
+
+/* "COMING SOON ✦ A new portfolio is on the way." */
+.status {
+  display: flex;
+  flex-wrap: wrap; /* on narrow phones the sentence moves to its own line */
+  align-items: center;
+  column-gap: 0.733em; /* 22px in Figma */
+  font-size: var(--size-small);
+}
+
+.status-title {
   font-family: var(--font-title);
-  font-size: var(--size-title);
   font-weight: 400;
   line-height: 0.68;
-  /* The letters are taller than the line height, so the gradient needs extra room above
-     and below or the tops get cut off. The gradient stops keep the Figma color range. */
+  /* Same trick as .intro: room for the letters, without changing the layout */
   padding-block: 0.3em;
+  margin-block: -0.3em;
   background-image: linear-gradient(to bottom, var(--color-gold) 0.3em, var(--color-red) calc(100% - 0.3em));
 }
 
-.tagline {
-  top: 45.313%;
-  font-family: var(--font-text);
-  font-size: var(--size-tagline);
-  font-weight: 400;
-  line-height: normal;
+.status-star {
+  width: 1.378em;
+  height: 1.533em;
 }
 
-/* The small four-pointed star below the text */
-.star {
-  top: 62.6%;
-  width: 4.62%;
-  height: 7.227%;
+.status-text {
+  font-family: var(--font-text);
+  line-height: normal;
 }
