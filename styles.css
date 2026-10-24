@@ -8,7 +8,8 @@
 
 @font-face {
   font-family: "Haarlemmer Bold Italic";
-  src: local("HaarlemmerMTW01-BoldItalic");
+  /* Uses the installed font if there is one, otherwise downloads it from the site */
+  src: local("HaarlemmerMTW01-BoldItalic"), url("fonts/haarlemmer-bold-italic.ttf") format("truetype");
 }
 
 @font-face {
