@@ -37,7 +37,7 @@
 
   /* Font sizes: clamp(smallest on phones, grows with the screen, Figma size on desktop) */
   --size-name: clamp(34px, 4.167vw, 60px);
-  --size-statement: clamp(22px, 3.125vw, 45px);
+  --size-statement: clamp(20px, 2.639vw, 38px);
   --size-small: clamp(16px, 2.083vw, 30px);
 
   /* Spacing around the page edges and between sections */
@@ -45,7 +45,7 @@
   --space-right: clamp(20px, 7.708vw, 111px);
   --space-bottom: clamp(32px, 5.486vw, 79px);
   --space-left: clamp(20px, 7.222vw, 104px);
-  --space-intro-to-status: clamp(24px, 2.778vw, 40px);
+  --space-intro-to-status: clamp(32px, 4.236vw, 61px);
 }
 
 /* ===== Basics ===== */
@@ -126,8 +126,8 @@ body {
 }
 
 .statement {
-  max-width: 17.97em; /* 808px in Figma, so the line breaks after "creating" */
-  margin-top: 0.728em;
+  max-width: 21.27em; /* 808px in Figma, so the line breaks after "creating" */
+  margin-top: 0.812em;
   font-family: var(--font-statement);
   font-size: var(--size-statement);
   line-height: 1.08;
