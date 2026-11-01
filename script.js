@@ -1,4 +1,24 @@
 /* ===== 1. The changing word in the headline ===== */
+
+// Wraps each letter in its own <span class="letter">, so letters can move on their own (part 4)
+function splitIntoLetters(element) {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  textNodes.forEach((node) => {
+    const pieces = document.createDocumentFragment();
+    for (const char of node.textContent) {
+      if (char.trim() === "") { pieces.append(char); continue; }
+      const letter = document.createElement("span");
+      letter.className = "letter";
+      letter.textContent = char;
+      pieces.append(letter);
+    }
+    node.replaceWith(pieces);
+  });
+}
+splitIntoLetters(document.querySelector(".headline"));
+
 const words = ["see", "feel", "connect", "interact", "explore"];
 // (There can be two copies of the headline: the normal one and the white one, see part 4)
 const swapWords = document.getElementsByClassName("swap-word");
@@ -12,6 +32,7 @@ setInterval(() => {
   setTimeout(() => {
     for (const swapWord of swapWords) {
       swapWord.textContent = words[wordIndex];
+      splitIntoLetters(swapWord);
       swapWord.classList.remove("is-leaving");
       swapWord.classList.add("is-entering");
       swapWord.offsetWidth; // let the browser register the start position
@@ -246,6 +267,25 @@ if (hasMouse) {
         }
       });
       lightText.style.clipPath = `path("${lightShape}")`;
+
+      // Letters of the headline move a little away from the mouse, and glide back
+      const letters = document.querySelectorAll("body > main .letter");
+      const lightLetters = lightText.querySelectorAll(".letter");
+      letters.forEach((letter, i) => {
+        const offset = letter.offset || (letter.offset = { x: 0, y: 0 });
+        const box = letter.getBoundingClientRect();
+        const centerX = box.left + box.width / 2 - offset.x;
+        const centerY = box.top + box.height / 2 - offset.y;
+        const dx = centerX - mouse.x, dy = centerY - mouse.y;
+        const distance = Math.hypot(dx, dy) || 1;
+        const reach = 130;   // how close the mouse must be (px)
+        const strength = distance < reach ? Math.pow(1 - distance / reach, 2) * 12 : 0;
+        offset.x += ((dx / distance) * strength - offset.x) * 0.15;
+        offset.y += ((dy / distance) * strength - offset.y) * 0.15;
+        const move = `${offset.x.toFixed(2)}px ${offset.y.toFixed(2)}px`;
+        letter.style.translate = move;
+        if (lightLetters[i]) lightLetters[i].style.translate = move; // keep the white copy in place
+      });
     }
     requestAnimationFrame(animate);
   }
