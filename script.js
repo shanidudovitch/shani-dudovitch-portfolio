@@ -172,6 +172,7 @@ if (hasMouse) {
   const label = { x: 0, y: 0 };  // the cursor text, gliding after the mouse
   const pen = { x: 0, y: 0 };    // draws the path, gliding a bit so the curves are round
   const labelOffset = { x: 14, y: 10 }; // where the cursor text sits next to the mouse
+  let labelScale = 1;                    // the cursor text grows when the mouse is fast
   let path = [];                 // points the mouse passed, newest first
   let started = false;
   let speed = 0;      // how fast the mouse moves (smoothed)
@@ -225,6 +226,12 @@ if (hasMouse) {
         labelOffset.y += (wantedY - labelOffset.y) * 0.15;
       }
       cursor.style.translate = `${label.x + labelOffset.x}px ${label.y + labelOffset.y}px`;
+
+      // The faster the mouse, the bigger the cursor text (up to about twice the size).
+      // It grows away from the mouse, from the corner closest to it.
+      labelScale += (1 + Math.min(1.1, speed * 0.45) - labelScale) * 0.12;
+      cursor.style.scale = labelScale.toFixed(3);
+      cursor.style.transformOrigin = `${labelOffset.x < 0 ? "right" : "left"} ${labelOffset.y < 0 ? "bottom" : "top"}`;
 
       // Add the new point to the path
       pen.x += (mouse.x - pen.x) * 0.11;   // lower = slower, rounder movement
