@@ -15,9 +15,9 @@
 <body>
 
   <header class="site-header">
-    <span class="name">Shani Dudovitch</span>
-    <span class="muted">Portfolio ©2026</span>
-    <span class="serif header-status">Coming soon</span>
+    <span class="name" data-cursor="Glad you’re here">Shani Dudovitch</span>
+    <span class="muted" data-cursor="Psst…">Portfolio ©2026</span>
+    <span class="serif header-status" data-cursor="I can’t wait">Coming soon</span>
   </header>
 
   <main>
@@ -30,18 +30,19 @@
   </main>
 
   <footer class="site-footer">
-    <span class="mono muted">Launching 30.11.2026</span>
-    <a class="link underline" data-cursor="Say hello" href="mailto:Shanidudovitch2044@gmail.com">Shanidudovitch2044@gmail.com</a>
+    <span class="mono muted" data-cursor="Almost there">Launching 30.11.2026</span>
+    <!-- Click: opens the mail app and also copies the address (see script.js) -->
+    <a class="link underline email-link" data-cursor="Say hello" href="mailto:Shanidudovitch2044@gmail.com">Shanidudovitch2044@gmail.com</a>
     <!-- TODO: replace # with Shani's LinkedIn profile address -->
     <a class="link" data-cursor="Let’s connect" href="#" target="_blank" rel="noopener">LinkedIn ↗</a>
-    <span class="mono muted">Hellooo, it’s closer than ever.</span>
+    <span class="mono muted" data-cursor="Glad you’re here">Hellooo, it’s closer than ever.</span>
   </footer>
 
-  <!-- Images from the work appear here when the mouse moves -->
+  <!-- Images from the work follow the mouse here as one smooth chain (see script.js) -->
   <div class="trail" aria-hidden="true"></div>
 
-  <!-- Custom cursor: short phrases that "talk" to the visitor follow the mouse -->
-  <div class="cursor serif" aria-hidden="true"><span class="cursor-text">Glad you’re here</span></div>
+  <!-- Custom cursor: says "Coming soon", and talks to the visitor on the top and bottom bars -->
+  <div class="cursor serif" aria-hidden="true"><span class="cursor-text">Coming soon</span></div>
 
   <script src="script.js"></script>
 </body>

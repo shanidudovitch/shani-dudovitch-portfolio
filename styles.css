@@ -5,12 +5,7 @@
   --color-text: #0a0a0a;
   --color-muted: #8c8c8c;
   --color-cursor: #52c0c8;  /* the talking cursor */
-
-  /* The text uses mix-blend-mode: difference (see "Text above the images").
-     These are the "opposite" colors that come out as the real ones on the background:
-     #f2f2f1 shows as #0a0a0a, #70706f shows as #8c8c8c. Over an image they turn light. */
-  --color-text-blend: #f2f2f1;
-  --color-muted-blend: #70706f;
+  --color-text-on-image: #ffffff;  /* text where it passes over a trail image */
 
   /* Fonts (free from Google Fonts, loaded in index.html) */
   --font-text: "Geist", sans-serif;
@@ -69,20 +64,29 @@ body {
 }
 
 /* ===== Text above the images =====
-   The images move under the text. "difference" flips the text color where they meet,
-   so the text stays readable: dark on the background, light on a dark image. */
+   The images move under the text. Where text passes over an image it turns white:
+   script.js puts a white copy of the text on top (.text-light)
+   and cuts it to the shape of the images. */
 .site-header,
 main,
 .site-footer {
   position: relative;
   z-index: 1;
-  color: var(--color-text-blend);
-  mix-blend-mode: difference;
 }
 
-.site-header .muted,
-main .muted,
-.site-footer .muted { color: var(--color-muted-blend); }
+.text-light {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-top) var(--space-side) var(--space-bottom);
+  color: var(--color-text-on-image);
+  pointer-events: none;
+  clip-path: path("M0 0Z");  /* nothing shown until the images appear */
+}
+
+.text-light .muted { color: var(--color-text-on-image); }
 
 /* ===== Top: name · Portfolio ©2026 · Coming soon ===== */
 .site-header {
@@ -100,7 +104,11 @@ main .muted,
 .header-status {
   justify-self: end;
   font-size: 20px;
+  transition: color 0.3s ease;
 }
+
+/* Turquoise on hover, like the cursor */
+.header-status:hover { color: var(--color-cursor); }
 
 /* ===== Middle: headline + subtitle ===== */
 main {
@@ -178,7 +186,31 @@ main {
   object-fit: cover;
 }
 
-/* Only the newest image shows its caption */
+/* Mouse trail: a fixed chain of images, moved every frame by script.js */
+.trail-slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--trail-width);
+  opacity: 0;
+  will-change: translate, scale, opacity;
+}
+
+.trail-slot img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.trail-slot figcaption {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Phones: only the newest image shows its caption */
 .trail-item figcaption {
   margin-top: 8px;
   font-family: var(--font-mono);
@@ -197,7 +229,7 @@ main {
   100% { opacity: 0; scale: 0.3; }
 }
 
-/* Phones and tablets have no mouse: images appear slowly by themselves */
+/* Phones and tablets have no mouse: images appear slowly by themselves (in .trail-item) */
 .trail-item.is-slow { animation-duration: 2.4s; }
 
 /* ===== Custom cursor ===== */
@@ -246,6 +278,7 @@ main {
 
 /* Visitors who asked their device for less motion */
 @media (prefers-reduced-motion: reduce) {
-  .trail { display: none; }
+  .trail,
+  .text-light { display: none; }
   .swap-word { transition: none; }
 }
