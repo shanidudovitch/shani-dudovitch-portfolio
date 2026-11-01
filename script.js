@@ -128,10 +128,10 @@ if (hasMouse) {
   // A chain of images laid out along the path of the mouse.
   // Image 0 is the front: the biggest, right behind the cursor.
   // Each next image sits further back on the path and is a little smaller.
-  const COUNT = 10;   // the most images the trail can have
+  const COUNT = 14;   // the most images the trail can have
 
-  // Size of image i compared to the front one: 1, 0.8, 0.64, 0.51… (never smaller than 0.2)
-  const sizeOf = (i) => Math.max(0.2, Math.pow(0.8, i));
+  // Size of image i compared to the front one: 1, 0.86, 0.74, 0.64… (never smaller than 0.22)
+  const sizeOf = (i) => Math.max(0.22, Math.pow(0.86, i));
   const slots = [];
   for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
     const slot = document.createElement("figure");
@@ -153,10 +153,19 @@ if (hasMouse) {
   }
   fillImages();
 
+  // Each click brings a new image to the front of the trail (the others move one step back),
+  // keeps the trail on screen and makes it a little longer. When the clicks stop, it fades slowly.
   document.addEventListener("click", (event) => {
     if (event.target.closest("a")) return; // links keep working as usual
-    order.push(order.shift());
+    order.unshift((order[0] + 1) % works.length);
+    order.length = COUNT;
     fillImages();
+    // Each click makes the trail longer: many fast clicks = a long trail
+    activity = Math.min(1, Math.max(activity, 0.3) + 0.12);
+    // A small "pop" on the new front image
+    slots[0].img.classList.remove("is-new");
+    slots[0].img.offsetWidth;
+    slots[0].img.classList.add("is-new");
   });
 
   const mouse = { x: 0, y: 0 };
@@ -218,8 +227,8 @@ if (hasMouse) {
       cursor.style.translate = `${label.x + labelOffset.x}px ${label.y + labelOffset.y}px`;
 
       // Add the new point to the path
-      pen.x += (mouse.x - pen.x) * 0.08;   // lower = slower, rounder movement
-      pen.y += (mouse.y - pen.y) * 0.08;
+      pen.x += (mouse.x - pen.x) * 0.11;   // lower = slower, rounder movement
+      pen.y += (mouse.y - pen.y) * 0.11;
       if (!path.length || Math.hypot(pen.x - path[0].x, pen.y - path[0].y) > 2) {
         path.unshift({ x: pen.x, y: pen.y });
         if (path.length > 2000) path.length = 2000;
@@ -236,8 +245,8 @@ if (hasMouse) {
 
       // Moving: the faster the mouse, the more images (slow ≈ 3, fast = all 10).
       // Still: the trail stays in place and fades out slowly.
-      const wanted = speed > 0.05 ? Math.min(1, 0.15 + speed * 0.4) : 0;
-      if (wanted > activity) activity += (wanted - activity) * 0.05;   // images join the trail calmly
+      const wanted = speed > 0.05 ? Math.min(1, 0.3 + speed * 0.8) : 0;
+      if (wanted > activity) activity += (wanted - activity) * 0.08;   // images join the trail smoothly
       else activity = activity < 0.02 ? 0 : activity * 0.99;
       speed *= 0.92;
 
