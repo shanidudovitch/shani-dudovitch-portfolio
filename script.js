@@ -105,7 +105,7 @@ const footer = document.querySelector(".site-footer");
 // so they never cover the links there. Near the bars, only the cursor is shown.
 // Returns 1 inside that area, and fades to 0 toward the bars.
 function zoneFade(y) {
-  const imageWidth = Math.min(130, Math.max(80, window.innerWidth * 0.09));
+  const imageWidth = Math.min(160, Math.max(100, window.innerWidth * 0.11));
   const halfHeight = (imageWidth * 3) / 4 / 2;
   const top = header.getBoundingClientRect().bottom + 24 + halfHeight;
   const bottom = footer.getBoundingClientRect().top - 24 - halfHeight;
@@ -129,6 +129,9 @@ if (hasMouse) {
   // Image 0 is the front: the biggest, right behind the cursor.
   // Each next image sits further back on the path and is a little smaller.
   const COUNT = 10;   // the most images the trail can have
+
+  // Size of image i compared to the front one: 1, 0.8, 0.64, 0.51… (never smaller than 0.2)
+  const sizeOf = (i) => Math.max(0.2, Math.pow(0.8, i));
   const slots = [];
   for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
     const slot = document.createElement("figure");
@@ -215,8 +218,8 @@ if (hasMouse) {
       cursor.style.translate = `${label.x + labelOffset.x}px ${label.y + labelOffset.y}px`;
 
       // Add the new point to the path
-      pen.x += (mouse.x - pen.x) * 0.18;   // lower = rounder curves
-      pen.y += (mouse.y - pen.y) * 0.18;
+      pen.x += (mouse.x - pen.x) * 0.08;   // lower = slower, rounder movement
+      pen.y += (mouse.y - pen.y) * 0.08;
       if (!path.length || Math.hypot(pen.x - path[0].x, pen.y - path[0].y) > 2) {
         path.unshift({ x: pen.x, y: pen.y });
         if (path.length > 2000) path.length = 2000;
@@ -233,8 +236,8 @@ if (hasMouse) {
 
       // Moving: the faster the mouse, the more images (slow ≈ 3, fast = all 10).
       // Still: the trail stays in place and fades out slowly.
-      const wanted = speed > 0.05 ? Math.min(1, 0.12 + speed * 0.55) : 0;
-      if (wanted > activity) activity += (wanted - activity) * 0.12;
+      const wanted = speed > 0.05 ? Math.min(1, 0.15 + speed * 0.4) : 0;
+      if (wanted > activity) activity += (wanted - activity) * 0.05;   // images join the trail calmly
       else activity = activity < 0.02 ? 0 : activity * 0.99;
       speed *= 0.92;
 
@@ -243,12 +246,12 @@ if (hasMouse) {
       let distance = 0;
       let lightShape = "M0 0Z";        // the outline of the images, for the white text
       slots.forEach((slot, i) => {
-        const scale = 1 - (i / (COUNT - 1)) * 0.6;   // 1 at the front → 0.4 at the back
+        const scale = sizeOf(i);                       // clear steps: each image is 80% of the one before
         const width = imageWidth * scale;
 
         // Spread along the path: the front starts behind the cursor,
         // each next image overlaps the one before it a little
-        distance += i === 0 ? width * 0.6 + 20 : (width + imageWidth * (1 - ((i - 1) / (COUNT - 1)) * 0.6)) / 2 * 1.1;
+        distance += i === 0 ? width * 0.6 + 24 : ((width + imageWidth * sizeOf(i - 1)) / 2) * 1.15;
         const point = pointOnPath(distance);
         slot.x = point.x;
         slot.y = point.y;
@@ -260,7 +263,7 @@ if (hasMouse) {
         slot.el.style.translate = `calc(${slot.x}px - 50%) calc(${slot.y}px - 50%)`;
         slot.el.style.scale = scale;
         // A gentle sway, each image a little out of step with the next: playful, like a ribbon
-        slot.el.style.rotate = `${Math.sin(performance.now() / 700 + i * 0.7) * 1.5}deg`;
+        slot.el.style.rotate = `${Math.sin(performance.now() / 1100 + i * 0.7) * 1.2}deg`;
 
         // Images that are clearly visible turn the text above them white
         if (opacity > 0.5) {

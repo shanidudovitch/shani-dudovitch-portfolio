@@ -25,7 +25,7 @@
   --space-bottom: 42px;
 
   /* Trail images */
-  --trail-width: clamp(80px, 9vw, 130px);
+  --trail-width: clamp(100px, 11vw, 160px);
 }
 
 /* ===== Basics ===== */
