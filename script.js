@@ -131,7 +131,14 @@ if (hasMouse) {
   const COUNT = 14;   // the most images the trail can have
 
   // Size of image i compared to the front one: 1, 0.86, 0.74, 0.64… (never smaller than 0.22)
-  const sizeOf = (i) => Math.max(0.22, Math.pow(0.86, i));
+  const baseSizeOf = (i) => Math.max(0.22, Math.pow(0.86, i));
+
+  // Clicking makes the front image grow, a bit more with every click (up to 2.5×).
+  // The images right behind it grow a little too, so the trail stays in proportion.
+  // When the clicks stop, they slowly go back to normal.
+  let clickGrow = 0;
+  let lastClick = 0;
+  const sizeOf = (i) => baseSizeOf(i) * (1 + clickGrow * Math.pow(0.6, i));
   const slots = [];
   for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
     const slot = document.createElement("figure");
@@ -162,6 +169,8 @@ if (hasMouse) {
     fillImages();
     // Each click makes the trail longer: many fast clicks = a long trail
     activity = Math.min(1, Math.max(activity, 0.3) + 0.12);
+    clickGrow = Math.min(1.5, clickGrow + 0.18);
+    lastClick = performance.now();
     // A small "pop" on the new front image
     slots[0].img.classList.remove("is-new");
     slots[0].img.offsetWidth;
@@ -256,13 +265,14 @@ if (hasMouse) {
       if (wanted > activity) activity += (wanted - activity) * 0.08;   // images join the trail smoothly
       else activity = activity < 0.02 ? 0 : activity * 0.99;
       speed *= 0.92;
+      if (performance.now() - lastClick > 600) clickGrow *= 0.96;   // shrink back slowly
 
       const shown = activity * COUNT; // how many images are visible
       const imageWidth = slots[0].img.offsetWidth;
       let distance = 0;
       let lightShape = "M0 0Z";        // the outline of the images, for the white text
       slots.forEach((slot, i) => {
-        const scale = sizeOf(i);                       // clear steps: each image is 80% of the one before
+        const scale = sizeOf(i);                       // clear steps: each image is a bit smaller than the one before
         const width = imageWidth * scale;
 
         // Spread along the path: the front starts behind the cursor,
