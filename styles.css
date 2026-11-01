@@ -25,7 +25,7 @@
   --space-bottom: 42px;
 
   /* Trail images */
-  --trail-width: clamp(90px, 11vw, 160px);
+  --trail-width: clamp(80px, 9vw, 130px);
 }
 
 /* ===== Basics ===== */
@@ -187,14 +187,6 @@ main {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-}
-
-/* Fairy dust left by the images (drawn by script.js), under the images */
-.dust {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
 }
 
 /* Mouse trail: a fixed chain of images, moved every frame by script.js */
