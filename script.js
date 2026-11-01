@@ -262,6 +262,8 @@ if (hasMouse) {
         slot.el.style.opacity = opacity;
         slot.el.style.translate = `calc(${slot.x}px - 50%) calc(${slot.y}px - 50%)`;
         slot.el.style.scale = scale;
+        // The further back, the softer: the front image is sharp, the end of the trail melts away
+        slot.el.style.filter = i < 2 ? "none" : `blur(${((i - 1) * 0.9).toFixed(1)}px)`;
         // A gentle sway, each image a little out of step with the next: playful, like a ribbon
         slot.el.style.rotate = `${Math.sin(performance.now() / 1100 + i * 0.7) * 1.2}deg`;
 
