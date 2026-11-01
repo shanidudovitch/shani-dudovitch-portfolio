@@ -263,9 +263,10 @@ if (hasMouse) {
       // Still: the trail stays in place and fades out slowly.
       const wanted = speed > 0.05 ? Math.min(1, 0.3 + speed * 0.8) : 0;
       if (wanted > activity) activity += (wanted - activity) * 0.08;   // images join the trail smoothly
+      else if (performance.now() - lastClick < 1800) { /* after a click: hold, so each image can be seen */ }
       else activity = activity < 0.02 ? 0 : activity * 0.99;
       speed *= 0.92;
-      if (performance.now() - lastClick > 600) clickGrow *= 0.96;   // shrink back slowly
+      if (performance.now() - lastClick > 1800) clickGrow *= 0.97;  // after a pause, shrink back slowly
 
       const shown = activity * COUNT; // how many images are visible
       const imageWidth = slots[0].img.offsetWidth;
