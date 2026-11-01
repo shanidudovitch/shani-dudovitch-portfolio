@@ -21,10 +21,10 @@ setInterval(() => {
 }, 2400);
 
 /* ===== 2. The talking cursor ===== */
-// The cursor starts with "Coming soon". On the top and bottom bars it "talks":
-// each item there has its own phrase in data-cursor (index.html).
-// The phrase stays until the mouse touches the next item.
+// The cursor says "Coming soon". While the mouse is on an item in the top or bottom bar,
+// it says that item's phrase (data-cursor in index.html), and goes back when the mouse leaves.
 // Moving the mouse fast makes it say "Psst…"; when the mouse stops, it goes back to "Coming soon".
+const DEFAULT_PHRASE = "Coming soon";
 const cursor = document.querySelector(".cursor");
 const cursorText = document.querySelector(".cursor-text");
 
@@ -37,12 +37,18 @@ function showCursorText(text) {
   }, 250);
 }
 
-let isFast = false; // true while the cursor says "Psst…" because of a fast move
+let isFast = false;     // true while the cursor says "Psst…" because of a fast move
+let isOnItem = false;   // true while the mouse is on a bar item
 
 document.querySelectorAll("[data-cursor]").forEach((item) => {
   item.addEventListener("pointerenter", () => {
     isFast = false;
+    isOnItem = true;
     showCursorText(item.dataset.cursor);
+  });
+  item.addEventListener("pointerleave", () => {
+    isOnItem = false;
+    showCursorText(DEFAULT_PHRASE);
   });
 });
 
@@ -98,11 +104,12 @@ if (hasMouse) {
   lightText.querySelectorAll("[aria-live]").forEach((el) => el.removeAttribute("aria-live"));
   document.body.appendChild(lightText);
 
-  // A fixed chain of images. Image 0 is the head (biggest, closest to the cursor),
-  // each next one follows the one before it and is a little smaller.
-  const COUNT = 9;
+  // A chain of images laid out along the path of the mouse.
+  // Image 0 is the front: the biggest, right behind the cursor.
+  // Each next image sits further back on the path and is a little smaller.
+  const COUNT = works.length;
   const slots = [];
-  for (let i = COUNT - 1; i >= 0; i--) {   // add the tail first, so the head is on top
+  for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
     const slot = document.createElement("figure");
     slot.className = "trail-slot";
     slot.innerHTML = `<img src="" alt="">${i === 0 ? "<figcaption></figcaption>" : ""}`;
@@ -110,20 +117,29 @@ if (hasMouse) {
     slots[i] = { el: slot, img: slot.querySelector("img"), caption: slot.querySelector("figcaption"), x: 0, y: 0 };
   }
 
-  // Gives the chain images, starting from a different work each time
-  let firstWork = 0;
+  // Which work is in which place. Clicking the page rotates it:
+  // the second becomes the first, and the first goes to the back.
+  const order = works.map((work, i) => i);
   function fillImages() {
     slots.forEach((slot, i) => {
-      const work = works[(firstWork + i) % works.length];
+      const work = works[order[i]];
       slot.img.src = work.src;
       if (slot.caption) slot.caption.textContent = work.caption;
     });
-    firstWork = (firstWork + 1) % works.length;
   }
   fillImages();
 
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("a")) return; // links keep working as usual
+    order.push(order.shift());
+    fillImages();
+  });
+
   const mouse = { x: 0, y: 0 };
-  const label = { x: 0, y: 0 };
+  const label = { x: 0, y: 0 };  // the cursor text, gliding after the mouse
+  const pen = { x: 0, y: 0 };    // draws the path, gliding a bit so the curves are round
+  const labelOffset = { x: 14, y: 10 }; // where the cursor text sits next to the mouse
+  let path = [];                 // points the mouse passed, newest first
   let started = false;
   let speed = 0;      // how fast the mouse moves (smoothed)
   let activity = 0;   // 0 = trail hidden, 1 = full trail
@@ -132,9 +148,8 @@ if (hasMouse) {
   window.addEventListener("pointermove", (event) => {
     if (!started) {
       // First move: put everything at the mouse
-      mouse.x = label.x = event.clientX;
-      mouse.y = label.y = event.clientY;
-      slots.forEach((slot) => { slot.x = mouse.x; slot.y = mouse.y; });
+      mouse.x = label.x = pen.x = event.clientX;
+      mouse.y = label.y = pen.y = event.clientY;
       started = true;
     }
     const step = Math.hypot(event.clientX - mouse.x, event.clientY - mouse.y);
@@ -148,47 +163,75 @@ if (hasMouse) {
 
   document.addEventListener("pointerleave", () => { cursor.style.opacity = 0; });
 
+  // The point on the path that is `distance` pixels back from the newest point
+  function pointOnPath(distance) {
+    for (let i = 1; i < path.length; i++) {
+      const a = path[i - 1], b = path[i];
+      const length = Math.hypot(b.x - a.x, b.y - a.y);
+      if (distance <= length) {
+        const t = distance / length;
+        return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+      }
+      distance -= length;
+    }
+    return path[path.length - 1];
+  }
+
   // Runs every frame: moves the cursor and the chain smoothly
   function animate() {
     if (started) {
-      // The cursor text glides softly after the mouse
       label.x += (mouse.x - label.x) * 0.25;
       label.y += (mouse.y - label.y) * 0.25;
-      cursor.style.translate = `${label.x + 14}px ${label.y + 10}px`;
 
-      // The head follows the mouse slowly (so it stays behind the cursor),
-      // and every image follows the one before it: one flowing line
-      slots.forEach((slot, i) => {
-        const target = i === 0 ? mouse : slots[i - 1];
-        const ease = i === 0 ? 0.12 : 0.3;
-        slot.x += (target.x - slot.x) * ease;
-        slot.y += (target.y - slot.y) * ease;
-      });
+      // The cursor text opens to the side away from the images, so it's never on top of them
+      if (path.length > 1) {
+        const behind = pointOnPath(60);
+        const wantedX = behind.x > path[0].x + 2 ? -14 - cursor.offsetWidth : 14;
+        const wantedY = behind.y > path[0].y + 2 ? -10 - cursor.offsetHeight : 10;
+        labelOffset.x += (wantedX - labelOffset.x) * 0.15;
+        labelOffset.y += (wantedY - labelOffset.y) * 0.15;
+      }
+      cursor.style.translate = `${label.x + labelOffset.x}px ${label.y + labelOffset.y}px`;
+
+      // Add the new point to the path
+      pen.x += (mouse.x - pen.x) * 0.35;
+      pen.y += (mouse.y - pen.y) * 0.35;
+      if (!path.length || Math.hypot(pen.x - path[0].x, pen.y - path[0].y) > 2) {
+        path.unshift({ x: pen.x, y: pen.y });
+        if (path.length > 400) path.length = 400;
+      }
 
       // Fast mouse: "Psst…". Stopped after that: back to "Coming soon".
-      if (!isFast && speed > 1.6) {
+      if (!isFast && !isOnItem && speed > 1.6) {
         isFast = true;
         showCursorText("Psst…");
       } else if (isFast && speed < 0.05) {
         isFast = false;
-        showCursorText("Coming soon");
+        showCursorText(DEFAULT_PHRASE);
       }
 
-      // Moving: the trail grows (faster = longer). Still: it fades out slowly.
+      // Moving: the trail grows (faster = longer). Still: it stays in place and fades out slowly.
       const wanted = Math.min(1, speed * 0.9);
       if (wanted > activity) activity += (wanted - activity) * 0.15;
       else activity *= 0.985;
       speed *= 0.92;
 
-      // When the trail is gone, the next one starts with other works
-      if (activity < 0.01 && activity > 0) { activity = 0; fillImages(); }
-
       const shown = activity * COUNT; // how many images are visible
       const imageWidth = slots[0].img.offsetWidth;
+      let distance = 0;
       let lightShape = "M0 0Z";        // the outline of the images, for the white text
       slots.forEach((slot, i) => {
-        const scale = 1 - (i / (COUNT - 1)) * 0.6;                 // 1 at the head → 0.4 at the tail
-        const visible = Math.max(0, Math.min(1, shown - i));      // the tail disappears first
+        const scale = 1 - (i / (COUNT - 1)) * 0.6;   // 1 at the front → 0.4 at the back
+        const width = imageWidth * scale;
+
+        // Spread along the path: the front starts behind the cursor,
+        // each next image overlaps the one before it a little
+        distance += i === 0 ? width * 0.6 + 20 : (width + imageWidth * (1 - ((i - 1) / (COUNT - 1)) * 0.6)) / 2 * 0.8;
+        const point = pointOnPath(distance);
+        slot.x = point.x;
+        slot.y = point.y;
+
+        const visible = Math.max(0, Math.min(1, shown - i));  // the back disappears first
         const opacity = visible * zoneFade(slot.y);
         slot.el.style.opacity = opacity;
         slot.el.style.translate = `calc(${slot.x}px - 50%) calc(${slot.y}px - 50%)`;
@@ -197,7 +240,7 @@ if (hasMouse) {
         // Images that are clearly visible turn the text above them white
         if (opacity > 0.5) {
           // The image sits at the top of its figure, which is scaled around its center
-          const w = imageWidth * scale, h = w * 0.75;
+          const w = width, h = w * 0.75;
           const left = slot.x - w / 2, top = slot.y - (slot.el.offsetHeight / 2) * scale;
           lightShape += ` M${left} ${top}h${w}v${h}h${-w}Z`;
         }
