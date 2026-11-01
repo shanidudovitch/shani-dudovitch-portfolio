@@ -4,7 +4,13 @@
   --color-background: #fcfcfb;
   --color-text: #0a0a0a;
   --color-muted: #8c8c8c;
-  --color-cursor: #52c0c8;  /* the "Coming soon" cursor */
+  --color-cursor: #52c0c8;  /* the talking cursor */
+
+  /* The text uses mix-blend-mode: difference (see "Text above the images").
+     These are the "opposite" colors that come out as the real ones on the background:
+     #f2f2f1 shows as #0a0a0a, #70706f shows as #8c8c8c. Over an image they turn light. */
+  --color-text-blend: #f2f2f1;
+  --color-muted-blend: #70706f;
 
   /* Fonts (free from Google Fonts, loaded in index.html) */
   --font-text: "Geist", sans-serif;
@@ -24,7 +30,7 @@
   --space-bottom: 42px;
 
   /* Trail images */
-  --trail-width: clamp(140px, 17vw, 250px);
+  --trail-width: clamp(90px, 11vw, 160px);
 }
 
 /* ===== Basics ===== */
@@ -61,6 +67,22 @@ body {
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
 }
+
+/* ===== Text above the images =====
+   The images move under the text. "difference" flips the text color where they meet,
+   so the text stays readable: dark on the background, light on a dark image. */
+.site-header,
+main,
+.site-footer {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text-blend);
+  mix-blend-mode: difference;
+}
+
+.site-header .muted,
+main .muted,
+.site-footer .muted { color: var(--color-muted-blend); }
 
 /* ===== Top: name · Portfolio ©2026 · Coming soon ===== */
 .site-header {
@@ -138,7 +160,7 @@ main {
   position: fixed;
   inset: 0;
   pointer-events: none;  /* never blocks clicks on links */
-  z-index: 5;
+  z-index: 0;            /* under the text */
 }
 
 .trail-item {
@@ -146,7 +168,7 @@ main {
   top: 0;
   left: 0;
   width: var(--trail-width);
-  animation: trail-life 1s ease-out forwards;
+  animation: trail-life 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .trail-item img {
@@ -166,12 +188,13 @@ main {
 
 .trail-item:last-child figcaption { opacity: 1; }
 
-/* Each image: appears, stays for a moment, then fades and shrinks */
+/* Each image: grows in, then keeps shrinking as it gets older.
+   So along the trail the images go from small (old) to large (new). */
 @keyframes trail-life {
-  0%   { opacity: 0; scale: 0.85; }
-  12%  { opacity: 1; scale: 1; }
-  60%  { opacity: 1; scale: 1; }
-  100% { opacity: 0; scale: 0.7; }
+  0%   { opacity: 0; scale: 0.6; }
+  14%  { opacity: 1; scale: 1; }
+  70%  { opacity: 1; scale: 0.55; }
+  100% { opacity: 0; scale: 0.3; }
 }
 
 /* Phones and tablets have no mouse: images appear slowly by themselves */
@@ -189,6 +212,17 @@ main {
   pointer-events: none;
   opacity: 0;  /* shown by script.js once the mouse moves */
   transition: opacity 0.2s ease;
+}
+
+/* The cursor's words fade when they change */
+.cursor-text {
+  display: inline-block;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+.cursor-text.is-changing {
+  opacity: 0;
+  filter: blur(3px);
 }
 
 /* Only on screens with a real mouse: hide the normal arrow */
