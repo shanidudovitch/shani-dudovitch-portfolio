@@ -128,7 +128,7 @@ if (hasMouse) {
   // A chain of images laid out along the path of the mouse.
   // Image 0 is the front: the biggest, right behind the cursor.
   // Each next image sits further back on the path and is a little smaller.
-  const COUNT = works.length;
+  const COUNT = 12;   // long trail: each work appears twice
   const slots = [];
   for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
     const slot = document.createElement("figure");
@@ -140,7 +140,7 @@ if (hasMouse) {
 
   // Which work is in which place. Clicking the page rotates it:
   // the second becomes the first, and the first goes to the back.
-  const order = works.map((work, i) => i);
+  const order = Array.from({ length: COUNT }, (_, i) => i % works.length);
   function fillImages() {
     slots.forEach((slot, i) => {
       const work = works[order[i]];
@@ -215,11 +215,11 @@ if (hasMouse) {
       cursor.style.translate = `${label.x + labelOffset.x}px ${label.y + labelOffset.y}px`;
 
       // Add the new point to the path
-      pen.x += (mouse.x - pen.x) * 0.35;
-      pen.y += (mouse.y - pen.y) * 0.35;
+      pen.x += (mouse.x - pen.x) * 0.18;   // lower = rounder curves
+      pen.y += (mouse.y - pen.y) * 0.18;
       if (!path.length || Math.hypot(pen.x - path[0].x, pen.y - path[0].y) > 2) {
         path.unshift({ x: pen.x, y: pen.y });
-        if (path.length > 400) path.length = 400;
+        if (path.length > 1200) path.length = 1200;
       }
 
       // Fast mouse: "Psst…". Stopped after that: back to "Coming soon".
@@ -232,9 +232,9 @@ if (hasMouse) {
       }
 
       // Moving: the trail grows (faster = longer). Still: it stays in place and fades out slowly.
-      const wanted = Math.min(1, speed * 0.9);
-      if (wanted > activity) activity += (wanted - activity) * 0.15;
-      else activity *= 0.985;
+      const wanted = Math.min(1, speed * 2.2);
+      if (wanted > activity) activity += (wanted - activity) * 0.12;
+      else activity *= 0.99;
       speed *= 0.92;
 
       const shown = activity * COUNT; // how many images are visible
@@ -242,12 +242,12 @@ if (hasMouse) {
       let distance = 0;
       let lightShape = "M0 0Z";        // the outline of the images, for the white text
       slots.forEach((slot, i) => {
-        const scale = 1 - (i / (COUNT - 1)) * 0.6;   // 1 at the front → 0.4 at the back
+        const scale = 1 - (i / (COUNT - 1)) * 0.65;  // 1 at the front → 0.35 at the back
         const width = imageWidth * scale;
 
         // Spread along the path: the front starts behind the cursor,
         // each next image overlaps the one before it a little
-        distance += i === 0 ? width * 0.6 + 20 : (width + imageWidth * (1 - ((i - 1) / (COUNT - 1)) * 0.6)) / 2 * 0.8;
+        distance += i === 0 ? width * 0.6 + 20 : (width + imageWidth * (1 - ((i - 1) / (COUNT - 1)) * 0.65)) / 2 * 0.95;
         const point = pointOnPath(distance);
         slot.x = point.x;
         slot.y = point.y;
@@ -257,6 +257,8 @@ if (hasMouse) {
         slot.el.style.opacity = opacity;
         slot.el.style.translate = `calc(${slot.x}px - 50%) calc(${slot.y}px - 50%)`;
         slot.el.style.scale = scale;
+        // A gentle sway, each image a little out of step with the next: playful, like a ribbon
+        slot.el.style.rotate = `${Math.sin(performance.now() / 600 + i * 0.7) * 2.5}deg`;
 
         // Images that are clearly visible turn the text above them white
         if (opacity > 0.5) {
