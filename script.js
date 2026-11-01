@@ -128,7 +128,7 @@ if (hasMouse) {
   // A chain of images laid out along the path of the mouse.
   // Image 0 is the front: the biggest, right behind the cursor.
   // Each next image sits further back on the path and is a little smaller.
-  const COUNT = 12;   // long trail: each work appears twice
+  const COUNT = 24;   // the most images the trail can have (each work several times)
   const slots = [];
   for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
     const slot = document.createElement("figure");
@@ -219,7 +219,7 @@ if (hasMouse) {
       pen.y += (mouse.y - pen.y) * 0.18;
       if (!path.length || Math.hypot(pen.x - path[0].x, pen.y - path[0].y) > 2) {
         path.unshift({ x: pen.x, y: pen.y });
-        if (path.length > 1200) path.length = 1200;
+        if (path.length > 2000) path.length = 2000;
       }
 
       // Fast mouse: "Psst…". Stopped after that: back to "Coming soon".
@@ -231,10 +231,11 @@ if (hasMouse) {
         showCursorText(DEFAULT_PHRASE);
       }
 
-      // Moving: the trail grows (faster = longer). Still: it stays in place and fades out slowly.
-      const wanted = Math.min(1, speed * 2.2);
+      // Moving: the faster the mouse, the more images (slow ≈ 4, fast = all 24).
+      // Still: the trail stays in place and fades out slowly.
+      const wanted = speed > 0.05 ? Math.min(1, 0.12 + speed * 0.55) : 0;
       if (wanted > activity) activity += (wanted - activity) * 0.12;
-      else activity *= 0.99;
+      else activity = activity < 0.02 ? 0 : activity * 0.99;
       speed *= 0.92;
 
       const shown = activity * COUNT; // how many images are visible
