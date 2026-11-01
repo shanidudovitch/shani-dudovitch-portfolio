@@ -128,6 +128,65 @@ if (hasMouse) {
   // A chain of images laid out along the path of the mouse.
   // Image 0 is the front: the biggest, right behind the cursor.
   // Each next image sits further back on the path and is a little smaller.
+  // Fairy dust: tiny soft dots the images leave behind, drawn on a canvas under them.
+  // Each dot takes the main color of the image it came from, floats up a little,
+  // twinkles, and fades away.
+  const dust = document.createElement("canvas");
+  dust.className = "dust";
+  trail.appendChild(dust);
+  const dustContext = dust.getContext("2d");
+  const particles = [];
+
+  function sizeDust() {
+    const ratio = window.devicePixelRatio || 1;
+    dust.width = window.innerWidth * ratio;
+    dust.height = window.innerHeight * ratio;
+    dustContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+  sizeDust();
+  window.addEventListener("resize", sizeDust);
+
+  // The main color of each work (its average color), for the dust
+  const workColors = works.map(() => "200, 200, 200");
+  works.forEach((work, i) => {
+    const image = new Image();
+    image.src = work.src;
+    image.onload = () => {
+      const tiny = document.createElement("canvas");
+      tiny.width = tiny.height = 1;
+      const tinyContext = tiny.getContext("2d");
+      tinyContext.drawImage(image, 0, 0, 1, 1);
+      const [r, g, b] = tinyContext.getImageData(0, 0, 1, 1).data;
+      workColors[i] = `${r}, ${g}, ${b}`;
+    };
+  });
+
+  function drawDust() {
+    dustContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= 1;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.97;
+      p.vy = p.vy * 0.97 - 0.015;        // floats up gently
+      const fade = p.life / p.maxLife;
+      const twinkle = 0.65 + 0.35 * Math.sin(p.life * 0.3 + p.seed);
+      const alpha = fade * twinkle;
+      const radius = p.size * (0.5 + fade * 0.5);
+      // A soft glow around a bright little center
+      dustContext.fillStyle = `rgba(${p.color}, ${(alpha * 0.18).toFixed(3)})`;
+      dustContext.beginPath();
+      dustContext.arc(p.x, p.y, radius * 3, 0, Math.PI * 2);
+      dustContext.fill();
+      dustContext.fillStyle = `rgba(${p.color}, ${(alpha * 0.95).toFixed(3)})`;
+      dustContext.beginPath();
+      dustContext.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      dustContext.fill();
+    }
+  }
+
   const COUNT = 24;   // the most images the trail can have (each work several times)
   const slots = [];
   for (let i = COUNT - 1; i >= 0; i--) {   // add the back first, so the front is on top
@@ -270,6 +329,36 @@ if (hasMouse) {
         }
       });
       lightText.style.clipPath = `path("${lightShape}")`;
+
+      // Fairy dust from the visible images, more when the mouse is faster
+      slots.forEach((slot, i) => {
+        const opacity = parseFloat(slot.el.style.opacity) || 0;
+        if (opacity < 0.3 || particles.length > 350) return;
+        const amount = Math.min(2, speed * 0.5) * (1 - i / COUNT);
+        if (Math.random() > amount) return;
+        const scale = parseFloat(slot.el.style.scale) || 1;
+        const w = imageWidth * scale, h = w * 0.75;
+        // Start just outside the edge of the image and drift away from it
+        const angle = Math.random() * Math.PI * 2;
+        const edgeX = Math.cos(angle), edgeY = Math.sin(angle);
+        const reach = 1 / Math.max(Math.abs(edgeX) / (w / 2), Math.abs(edgeY) / (h / 2));
+        const push = 0.3 + Math.random() * 0.7;
+        particles.push({
+          x: slot.x + edgeX * (reach + 4),
+          y: slot.y + edgeY * (reach + 4),
+          vx: edgeX * push + (Math.random() - 0.5) * 0.3,
+          vy: edgeY * push + (Math.random() - 0.5) * 0.3,
+          size: 1 + Math.random() * 2,
+          // Mostly the image's own color, sometimes the turquoise of the cursor
+          color: Math.random() < 0.3 ? "82, 192, 200" : workColors[order[i]],
+          seed: Math.random() * 10,
+          life: 0,
+          maxLife: 0,
+        });
+        const last = particles[particles.length - 1];
+        last.life = last.maxLife = 80 + Math.random() * 70;   // about 1.5–2.5 seconds
+      });
+      drawDust();
 
       // Letters of the headline move a little away from the mouse, and glide back
       const letters = document.querySelectorAll("body > main .letter");

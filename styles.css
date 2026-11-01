@@ -189,6 +189,14 @@ main {
   object-fit: cover;
 }
 
+/* Fairy dust left by the images (drawn by script.js), under the images */
+.dust {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 /* Mouse trail: a fixed chain of images, moved every frame by script.js */
 .trail-slot {
   position: absolute;
