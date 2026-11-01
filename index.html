@@ -4,39 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shani Dudovitch – Coming soon</title>
-  <!-- Fonts from Google Fonts: Cormorant Garamond (Regular + Bold Italic) and Varela Round -->
+  <meta name="description" content="Designing new ways to see things. A new portfolio by Shani Dudovitch is on its way.">
+  <!-- Fonts from Google Fonts: Geist (text), Instrument Serif Italic (one special word), IBM Plex Mono (small details) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,700&family=Varela+Round&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;600&family=IBM+Plex+Mono&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <header class="site-header">
-    <!-- Opens the visitor's email app with a new message to Shani -->
-    <a class="contact-link" href="mailto:Shanidudovitch2044@gmail.com">
-      <span class="contact-link-row">
-        Get in touch
-        <img class="contact-arrow" src="images/arrow.svg" alt="">
-      </span>
-      <img class="contact-underline" src="images/underline.svg" alt="">
-    </a>
+    <span class="name">Shani Dudovitch</span>
+    <span class="muted">Portfolio ©2026</span>
+    <span class="serif header-status">Coming soon</span>
   </header>
 
   <main>
-    <div class="intro gradient-text">
-      <h1 class="name">Shani Dudovitch</h1>
-      <p class="statement">I love challenging the familiar and creating something new and meaningful.</p>
-    </div>
-
-    <p class="status">
-      <span class="status-title gradient-text">COMING SOON</span>
-      <!-- Decorative star (alt is empty because it carries no information) -->
-      <img class="status-star" src="images/star.svg" alt="">
-      <span class="status-text gradient-text">A new portfolio is on the way.</span>
-    </p>
+    <!-- The word in .swap-word changes every few seconds (see script.js) -->
+    <h1 class="headline">
+      <span class="headline-strong">Designing</span> new ways<br>
+      to <span class="swap-word serif" aria-live="polite">see</span> things.
+    </h1>
+    <p class="subtitle muted">A new portfolio is on its way — <br>UX/UI, branding and product design.</p>
   </main>
 
+  <footer class="site-footer">
+    <span class="mono muted">Launching 30.11.2026</span>
+    <a class="link underline" href="mailto:Shanidudovitch2044@gmail.com">Shanidudovitch2044@gmail.com</a>
+    <!-- TODO: replace # with Shani's LinkedIn profile address -->
+    <a class="link" href="#" target="_blank" rel="noopener">LinkedIn ↗</a>
+    <span class="mono muted">Hellooo, it’s closer than ever.</span>
+  </footer>
+
+  <!-- Images from the work appear here when the mouse moves -->
+  <div class="trail" aria-hidden="true"></div>
+
+  <!-- Custom cursor: the words "Coming soon" follow the mouse -->
+  <div class="cursor serif" aria-hidden="true">Coming soon</div>
+
+  <script src="script.js"></script>
 </body>
 </html>
