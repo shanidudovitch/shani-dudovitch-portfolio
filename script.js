@@ -43,7 +43,7 @@ setInterval(() => {
 
 /* ===== 2. The talking cursor ===== */
 // The cursor says "Coming soon". While the mouse is on an item in the top or bottom bar,
-// it says that item's phrase (data-cursor in index.html), and goes back 1.5s after the mouse leaves.
+// it says that item's phrase (data-cursor in index.html), and goes back 3s after the mouse leaves.
 // Moving the mouse fast makes it say "Psst…"; when the mouse stops, it goes back to "Coming soon".
 const DEFAULT_PHRASE = "Coming soon";
 const cursor = document.querySelector(".cursor");
@@ -71,11 +71,11 @@ document.querySelectorAll("[data-cursor]").forEach((item) => {
     showCursorText(item.dataset.cursor);
   });
   item.addEventListener("pointerleave", () => {
-    // Keep the phrase a little longer, so there's time to read it
+    // Keep the phrase for a while, so there's time to read it
     backTimer = setTimeout(() => {
       isOnItem = false;
       showCursorText(DEFAULT_PHRASE);
-    }, 1500);
+    }, 3000);
   });
 });
 
@@ -187,6 +187,7 @@ if (hasMouse) {
   const label = { x: 0, y: 0 };  // the cursor text, gliding after the mouse
   const pen = { x: 0, y: 0 };    // draws the path, gliding a bit so the curves are round
   const labelOffset = { x: 14, y: 10 }; // where the cursor text sits next to the mouse
+  const labelSide = { x: 1, y: 1 };      // 1 = right / below the mouse, -1 = left / above
   let labelScale = 1;                    // the cursor text grows when the mouse is fast
   let path = [];                 // points the mouse passed, newest first
   let started = false;
@@ -232,14 +233,26 @@ if (hasMouse) {
       label.x += (mouse.x - label.x) * 0.25;
       label.y += (mouse.y - label.y) * 0.25;
 
-      // The cursor text opens to the side away from the images, so it's never on top of them
-      if (path.length > 1) {
+      // The cursor text opens to the side away from the images, so it's never on top of them.
+      // It only switches sides while images are showing, and only for a clear change of direction,
+      // so near the bars (where there are no images) it stays calm and doesn't jump.
+      if (path.length > 1 && activity > 0.15 && zoneFade(mouse.y) > 0) {
         const behind = pointOnPath(60);
-        const wantedX = behind.x > path[0].x + 2 ? -14 - cursor.offsetWidth : 14;
-        const wantedY = behind.y > path[0].y + 2 ? -10 - cursor.offsetHeight : 10;
-        labelOffset.x += (wantedX - labelOffset.x) * 0.15;
-        labelOffset.y += (wantedY - labelOffset.y) * 0.15;
+        if (behind.x > path[0].x + 25) labelSide.x = -1;
+        else if (behind.x < path[0].x - 25) labelSide.x = 1;
+        if (behind.y > path[0].y + 25) labelSide.y = -1;
+        else if (behind.y < path[0].y - 25) labelSide.y = 1;
       }
+      // Never let the text leave the screen (for example at the far right of the bottom bar)
+      const textWidth = cursor.offsetWidth * labelScale, textHeight = cursor.offsetHeight * labelScale;
+      if (mouse.x + 14 + textWidth > window.innerWidth - 12) labelSide.x = -1;
+      else if (mouse.x - 14 - textWidth < 12) labelSide.x = 1;
+      if (mouse.y + 10 + textHeight > window.innerHeight - 12) labelSide.y = -1;
+      else if (mouse.y - 10 - textHeight < 12) labelSide.y = 1;
+      const wantedX = labelSide.x < 0 ? -14 - cursor.offsetWidth : 14;
+      const wantedY = labelSide.y < 0 ? -10 - cursor.offsetHeight : 10;
+      labelOffset.x += (wantedX - labelOffset.x) * 0.1;
+      labelOffset.y += (wantedY - labelOffset.y) * 0.1;
       cursor.style.translate = `${label.x + labelOffset.x}px ${label.y + labelOffset.y}px`;
 
       // The faster the mouse, the bigger the cursor text (up to about twice the size).
