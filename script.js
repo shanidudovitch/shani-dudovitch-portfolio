@@ -257,7 +257,9 @@ if (hasMouse) {
 
       // The faster the mouse, the bigger the cursor text (up to about twice the size).
       // It grows away from the mouse, from the corner closest to it.
-      labelScale += (1 + Math.min(1.1, speed * 0.45) - labelScale) * 0.12;
+      // While it says "Psst…" (a really fast mouse) it grows much more, up to about 4×.
+      const grow = isFast ? Math.min(3, speed * 0.9) : Math.min(1.1, speed * 0.45);
+      labelScale += (1 + grow - labelScale) * 0.12;
       cursor.style.scale = labelScale.toFixed(3);
       cursor.style.transformOrigin = `${labelOffset.x < 0 ? "right" : "left"} ${labelOffset.y < 0 ? "bottom" : "top"}`;
 
@@ -276,6 +278,10 @@ if (hasMouse) {
       } else if (isFast && speed < 0.05) {
         isFast = false;
         showCursorText(DEFAULT_PHRASE);
+      } else if (isFast && !cursorText.classList.contains("is-changing")) {
+        // The faster the mouse, the longer the "Psssst…"
+        const esses = 2 + Math.min(6, Math.floor(speed * 1.5));
+        cursorText.textContent = "P" + "s".repeat(esses) + "t…";
       }
 
       // Moving: the faster the mouse, the more images (slow ≈ 3, fast = all 10).
