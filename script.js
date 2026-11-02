@@ -43,7 +43,7 @@ setInterval(() => {
 
 /* ===== 2. The talking cursor ===== */
 // The cursor says "Coming soon". While the mouse is on an item in the top or bottom bar,
-// it says that item's phrase (data-cursor in index.html), and goes back when the mouse leaves.
+// it says that item's phrase (data-cursor in index.html), and goes back 1.5s after the mouse leaves.
 // Moving the mouse fast makes it say "Psst…"; when the mouse stops, it goes back to "Coming soon".
 const DEFAULT_PHRASE = "Coming soon";
 const cursor = document.querySelector(".cursor");
@@ -61,15 +61,21 @@ function showCursorText(text) {
 let isFast = false;     // true while the cursor says "Psst…" because of a fast move
 let isOnItem = false;   // true while the mouse is on a bar item
 
+let backTimer = null;   // waits a moment before going back to "Coming soon"
+
 document.querySelectorAll("[data-cursor]").forEach((item) => {
   item.addEventListener("pointerenter", () => {
+    clearTimeout(backTimer);
     isFast = false;
     isOnItem = true;
     showCursorText(item.dataset.cursor);
   });
   item.addEventListener("pointerleave", () => {
-    isOnItem = false;
-    showCursorText(DEFAULT_PHRASE);
+    // Keep the phrase a little longer, so there's time to read it
+    backTimer = setTimeout(() => {
+      isOnItem = false;
+      showCursorText(DEFAULT_PHRASE);
+    }, 1500);
   });
 });
 
