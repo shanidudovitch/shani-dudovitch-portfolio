@@ -128,9 +128,6 @@ main {
 
 .headline-strong { font-weight: 400; }
 
-/* Each letter of the headline can move a little with the mouse (script.js) */
-.letter { display: inline-block; }
-
 /* The changing word: slightly bigger, like in Figma (94px next to 85px) */
 .swap-word {
   display: inline-block;

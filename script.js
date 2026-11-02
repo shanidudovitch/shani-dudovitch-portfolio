@@ -1,24 +1,4 @@
 /* ===== 1. The changing word in the headline ===== */
-
-// Wraps each letter in its own <span class="letter">, so letters can move on their own (part 4)
-function splitIntoLetters(element) {
-  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-  const textNodes = [];
-  while (walker.nextNode()) textNodes.push(walker.currentNode);
-  textNodes.forEach((node) => {
-    const pieces = document.createDocumentFragment();
-    for (const char of node.textContent) {
-      if (char.trim() === "") { pieces.append(char); continue; }
-      const letter = document.createElement("span");
-      letter.className = "letter";
-      letter.textContent = char;
-      pieces.append(letter);
-    }
-    node.replaceWith(pieces);
-  });
-}
-splitIntoLetters(document.querySelector(".headline"));
-
 const words = ["see", "feel", "connect", "interact", "explore"];
 // (There can be two copies of the headline: the normal one and the white one, see part 4)
 const swapWords = document.getElementsByClassName("swap-word");
@@ -32,7 +12,6 @@ setInterval(() => {
   setTimeout(() => {
     for (const swapWord of swapWords) {
       swapWord.textContent = words[wordIndex];
-      splitIntoLetters(swapWord);
       swapWord.classList.remove("is-leaving");
       swapWord.classList.add("is-entering");
       swapWord.offsetWidth; // let the browser register the start position
@@ -44,7 +23,7 @@ setInterval(() => {
 /* ===== 2. The talking cursor ===== */
 // The cursor says "Coming soon". While the mouse is on an item in the top or bottom bar,
 // it says that item's phrase (data-cursor in index.html), and goes back 3s after the mouse leaves.
-// Moving the mouse fast makes it say "Psst…"; when the mouse stops, it goes back to "Coming soon".
+// Moving the mouse fast makes it say a big "Psst"; when the mouse rests, it goes back to "Coming soon".
 const DEFAULT_PHRASE = "Coming soon";
 const cursor = document.querySelector(".cursor");
 const cursorText = document.querySelector(".cursor-text");
@@ -58,7 +37,7 @@ function showCursorText(text) {
   }, 250);
 }
 
-let isFast = false;     // true while the cursor says "Psst…" because of a fast move
+let isFast = false;     // true while the cursor says "Psst" because of a fast move
 let isOnItem = false;   // true while the mouse is on a bar item
 
 let backTimer = null;   // waits a moment before going back to "Coming soon"
@@ -189,6 +168,7 @@ if (hasMouse) {
   const labelOffset = { x: 14, y: 10 }; // where the cursor text sits next to the mouse
   const labelSide = { x: 1, y: 1 };      // 1 = right / below the mouse, -1 = left / above
   let labelScale = 1;                    // the cursor text grows when the mouse is fast
+  let restingSince = 0;                  // when the mouse stopped moving (for "Psst")
   let path = [];                 // points the mouse passed, newest first
   let started = false;
   let speed = 0;      // how fast the mouse moves (smoothed)
@@ -236,7 +216,7 @@ if (hasMouse) {
       // The cursor text opens to the side away from the images, so it's never on top of them.
       // It only switches sides while images are showing, and only for a clear change of direction,
       // so near the bars (where there are no images) it stays calm and doesn't jump.
-      if (path.length > 1 && activity > 0.15 && zoneFade(mouse.y) > 0) {
+      if (path.length > 1 && activity > 0.15 && zoneFade(mouse.y) > 0 && !isFast) {
         const behind = pointOnPath(60);
         if (behind.x > path[0].x + 25) labelSide.x = -1;
         else if (behind.x < path[0].x - 25) labelSide.x = 1;
@@ -257,8 +237,8 @@ if (hasMouse) {
 
       // The faster the mouse, the bigger the cursor text (up to about twice the size).
       // It grows away from the mouse, from the corner closest to it.
-      // While it says "Psst…" (a really fast mouse) it grows much more, up to about 4×.
-      const grow = isFast ? Math.min(3, speed * 0.9) : Math.min(1.1, speed * 0.45);
+      // While it says "Psst" (a really fast mouse) it stays big and steady (3.5×), easy to read.
+      const grow = isFast ? 2.5 : Math.min(1.1, speed * 0.45);
       labelScale += (1 + grow - labelScale) * 0.12;
       cursor.style.scale = labelScale.toFixed(3);
       cursor.style.transformOrigin = `${labelOffset.x < 0 ? "right" : "left"} ${labelOffset.y < 0 ? "bottom" : "top"}`;
@@ -271,17 +251,18 @@ if (hasMouse) {
         if (path.length > 2000) path.length = 2000;
       }
 
-      // Fast mouse: "Psst…". Stopped after that: back to "Coming soon".
+      // Fast mouse: a big "Psst". It stays while you keep playing,
+      // and goes back to "Coming soon" only after the mouse rests for a moment.
       if (!isFast && !isOnItem && speed > 1.6) {
         isFast = true;
-        showCursorText("Psst…");
-      } else if (isFast && speed < 0.05) {
-        isFast = false;
-        showCursorText(DEFAULT_PHRASE);
-      } else if (isFast && !cursorText.classList.contains("is-changing")) {
-        // The faster the mouse, the longer the "Psssst…"
-        const esses = 2 + Math.min(6, Math.floor(speed * 1.5));
-        cursorText.textContent = "P" + "s".repeat(esses) + "t…";
+        showCursorText("Psst");
+      }
+      if (isFast) {
+        if (speed > 0.05) restingSince = performance.now();
+        else if (performance.now() - restingSince > 900) {
+          isFast = false;
+          showCursorText(DEFAULT_PHRASE);
+        }
       }
 
       // Moving: the faster the mouse, the more images (slow ≈ 3, fast = all 10).
@@ -328,27 +309,6 @@ if (hasMouse) {
         }
       });
       lightText.style.clipPath = `path("${lightShape}")`;
-
-
-
-      // Letters of the headline move a little away from the mouse, and glide back
-      const letters = document.querySelectorAll("body > main .letter");
-      const lightLetters = lightText.querySelectorAll(".letter");
-      letters.forEach((letter, i) => {
-        const offset = letter.offset || (letter.offset = { x: 0, y: 0 });
-        const box = letter.getBoundingClientRect();
-        const centerX = box.left + box.width / 2 - offset.x;
-        const centerY = box.top + box.height / 2 - offset.y;
-        const dx = centerX - mouse.x, dy = centerY - mouse.y;
-        const distance = Math.hypot(dx, dy) || 1;
-        const reach = 130;   // how close the mouse must be (px)
-        const strength = distance < reach ? Math.pow(1 - distance / reach, 2) * 12 : 0;
-        offset.x += ((dx / distance) * strength - offset.x) * 0.15;
-        offset.y += ((dy / distance) * strength - offset.y) * 0.15;
-        const move = `${offset.x.toFixed(2)}px ${offset.y.toFixed(2)}px`;
-        letter.style.translate = move;
-        if (lightLetters[i]) lightLetters[i].style.translate = move; // keep the white copy in place
-      });
     }
     requestAnimationFrame(animate);
   }
